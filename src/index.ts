@@ -1,6 +1,6 @@
 import { getClockAngle } from "./1.clock-angle";
 import { getQuestionPart } from './2.remote-associates-test';
-import { quickestPath } from "./3.snakeAndLadder";
+import { quickestPath } from "./3.snake-and-ladder";
 import { minEnergy } from "./4.one-dimension-trip";
 
 getClockAngle("12:30");
