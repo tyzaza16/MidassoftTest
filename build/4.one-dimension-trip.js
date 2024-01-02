@@ -14,11 +14,27 @@ function minEnergy(start, shops, stations, target) {
     let shopToAll = [];
     let targetToAll = [];
     const shopObj = {};
+    // find the last vertex 
+    let lastVertex = Math.max(start, ...shops, ...stations, target);
     // find shortest path begin with start vertex
-    startToAll = dijkstraAlgorithms(start, start, stations, target);
+    startToAll = dijkstraAlgorithms(start, start, stations, target, lastVertex);
+    if (start > target ||
+        start === null ||
+        target === null ||
+        !validateShops(start, shops, target)) {
+        throw new Error('start and target format not correctly');
+    }
+    // handling error for no shops
+    if (!shops.length) {
+        const vertex = startToAll.find((elem) => elem.no === target);
+        if (!vertex) {
+            throw new Error('can not find target');
+        }
+        return vertex.val;
+    }
     // find shortest path of shops vertex to every path
     for (let i = 0; i < shops.length; i++) {
-        const shopVertex = dijkstraAlgorithms(shops[i], start, stations, target);
+        const shopVertex = dijkstraAlgorithms(shops[i], start, stations, target, lastVertex);
         shopObj[`${shops[i]}`] = shopVertex;
         shopToAll.push(shopObj);
     }
@@ -50,7 +66,7 @@ function minEnergy(start, shops, stations, target) {
     return minEnergy;
 }
 exports.minEnergy = minEnergy;
-function dijkstraAlgorithms(initValue, start, stations, target) {
+function dijkstraAlgorithms(initValue, start, stations, target, lastVertex) {
     /* create all vertex and at it into unvisited list */
     // create unvisited
     let unvisited = [];
@@ -60,8 +76,8 @@ function dijkstraAlgorithms(initValue, start, stations, target) {
     // create first vertex 
     let vertex = new Vertex(start, initValue === 0 ? 0 : Infinity, null, [[1, 1]]);
     unvisited.push(vertex);
-    for (let i = 1; i <= target; i++) {
-        vertex = new Vertex(i, initValue === i ? 0 : Infinity, null, i === target ? [[i - 1, 1]] : [[i - 1, 1], [i + 1, 1]]);
+    for (let i = 1; i <= lastVertex; i++) {
+        vertex = new Vertex(i, initValue === i ? 0 : Infinity, null, i === lastVertex ? [[i - 1, 1]] : [[i - 1, 1], [i + 1, 1]]);
         unvisited.push(vertex);
     }
     // mapping weight beetween neighbours
@@ -73,14 +89,14 @@ function dijkstraAlgorithms(initValue, start, stations, target) {
         }
     }
     listOfVertex = [...unvisited];
-    // checking if initValue === target
-    if (initValue === target) {
+    // checking if initValue === lastVertex
+    if (initValue === lastVertex) {
         listOfVertex = unvisited.reverse();
         // copy from lsitOfVertex
         unvisited = [...listOfVertex];
     }
-    // checking if initValue !== start && initValue !== target
-    if (initValue !== start && initValue !== target) {
+    // checking if initValue !== start && initValue !== lastVertex
+    if (initValue !== start && initValue !== lastVertex) {
         for (let i = 0; i <= initValue; i++) {
             listOfVertex[i] = unvisited[initValue - i]; // [4] = [4] | [0] [4], [1] [3], [2] [2] 
         }
@@ -148,4 +164,12 @@ function permutation(array) {
     let output = [];
     generate(array.length, array.slice(), output);
     return output;
+}
+function validateShops(start, shops, target) {
+    for (let i = 0; i < shops.length; i++) {
+        if (shops[i] < start) {
+            return false;
+        }
+    }
+    return true;
 }

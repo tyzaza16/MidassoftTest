@@ -16,12 +16,36 @@ export function minEnergy(start: number, shops: number[], stations: number[], ta
   let targetToAll: Vertex[] = [];
   const shopObj: { [key:string]: Vertex[] } = {};
 
+  // find the last vertex 
+  let lastVertex: number = Math.max(start, ...shops, ...stations, target);
+
   // find shortest path begin with start vertex
-  startToAll = dijkstraAlgorithms(start, start, stations, target);
+  startToAll = dijkstraAlgorithms(start, start, stations, target, lastVertex);
+
+
+  if(
+    start > target || 
+    start === null || 
+    target === null || 
+    !validateShops(start, shops, target)) {
+    throw new Error('start and target format not correctly');
+  }
+
+  // handling error for no shops
+  if(!shops.length) {
+    const vertex = startToAll.find((elem) => elem.no === target);
+
+    if(!vertex) {
+      throw new Error('can not find target');
+    }
+
+    return vertex.val;
+
+  }
 
   // find shortest path of shops vertex to every path
   for( let i = 0 ; i < shops.length; i++ ) {
-    const shopVertex: Vertex[] = dijkstraAlgorithms(shops[i], start, stations, target);
+    const shopVertex: Vertex[] = dijkstraAlgorithms(shops[i], start, stations, target, lastVertex);
     shopObj[`${shops[i]}`] = shopVertex;
     shopToAll.push(shopObj);
   }
@@ -70,7 +94,7 @@ export function minEnergy(start: number, shops: number[], stations: number[], ta
 }
 
 
-function dijkstraAlgorithms(initValue: number, start: number, stations: number[], target: number): Vertex[] {
+function dijkstraAlgorithms(initValue: number, start: number, stations: number[], target: number, lastVertex: number): Vertex[] {
     /* create all vertex and at it into unvisited list */
 
   // create unvisited
@@ -83,12 +107,12 @@ function dijkstraAlgorithms(initValue: number, start: number, stations: number[]
   let vertex: Vertex = new Vertex(start, initValue === 0 ? 0 : Infinity ,null, [ [1, 1] ]);
   unvisited.push(vertex);
 
-  for(let i = 1; i <= target ; i++) {
+  for(let i = 1; i <= lastVertex ; i++) {
     vertex = new Vertex(
       i, 
       initValue === i ? 0 : Infinity , 
       null, 
-      i === target ? [ [i-1,1] ] : [ [i-1,1], [i+1,1] ]);
+      i === lastVertex ? [ [i-1,1] ] : [ [i-1,1], [i+1,1] ]);
     unvisited.push(vertex);
   }
   
@@ -104,14 +128,14 @@ function dijkstraAlgorithms(initValue: number, start: number, stations: number[]
   listOfVertex = [...unvisited];
   
 
-  // checking if initValue === target
-  if(initValue === target) {
+  // checking if initValue === lastVertex
+  if(initValue === lastVertex) {
     listOfVertex = unvisited.reverse();
     // copy from lsitOfVertex
     unvisited = [...listOfVertex];
   }
-  // checking if initValue !== start && initValue !== target
-  if(initValue !== start && initValue !== target) {
+  // checking if initValue !== start && initValue !== lastVertex
+  if(initValue !== start && initValue !== lastVertex) {
 
     for(let i = 0 ; i <= initValue ; i++ ) {
       listOfVertex[i] = unvisited[initValue - i]; // [4] = [4] | [0] [4], [1] [3], [2] [2] 
@@ -208,4 +232,15 @@ function permutation(array: number[]): number[][] {
   generate(array.length, array.slice(), output);
 
   return output;
+}
+
+function validateShops(start: number, shops: number[], target: number): boolean {
+
+
+  for(let i = 0 ; i < shops.length ; i++) {
+    if(shops[i] < start ) {
+      return false;
+    }
+  }
+  return true;
 }
